@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Train and use a logistic regression credit card fraud detection model.">
+  <title>Credit Card Fraud Detection</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172033;
+      background: #f3f6fb;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 46px 20px 38px; color: white; background: #102746; }
+    .wrap { width: min(1020px, calc(100% - 36px)); margin: 0 auto; }
+    .eyebrow { margin: 0 0 9px; color: #7dd3fc; font-size: .78rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.04em; }
+    header p:last-child { max-width: 690px; margin: 12px 0 0; color: #d4e2f1; line-height: 1.6; }
+    main { padding: 26px 0 48px; }
+    .notice, .error, .panel { margin: 0 0 18px; padding: 18px 20px; border: 1px solid #dfe6f0; border-radius: 12px; background: white; }
+    .notice { border-color: #c7e9f5; background: #effaff; color: #164e63; line-height: 1.6; }
+    .error { border-color: #fecaca; background: #fff1f2; color: #991b1b; }
+    .panel { padding: 24px; box-shadow: 0 5px 18px #152d4a0a; }
+    .panel h2 { margin: 0; font-size: 1.2rem; }
+    .description { margin: 7px 0 20px; color: #64748b; font-size: .94rem; line-height: 1.55; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    label { display: block; margin-bottom: 7px; font-size: .88rem; font-weight: 650; }
+    input[type="text"], input[type="number"], input[type="file"] { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font: inherit; }
+    input[type="file"] { padding: 8px; }
+    .field-hint { margin: 6px 0 0; color: #64748b; font-size: .81rem; }
+    button, .button { display: inline-block; margin-top: 20px; padding: 11px 16px; border: 0; border-radius: 8px; background: #147d92; color: white; cursor: pointer; font: inherit; font-weight: 700; text-decoration: none; }
+    button:hover, .button:hover { background: #106578; }
+    .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 11px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: .84rem; }
+    .status.ready { background: #ecfdf5; color: #166534; }
+    .results { margin-top: 22px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin: 18px 0; }
+    .metric { padding: 14px; border: 1px solid #e2e8f0; border-radius: 9px; background: #f8fafc; }
+    .metric span { display: block; color: #64748b; font-size: .8rem; }
+    .metric strong { display: block; margin-top: 5px; font-size: 1.2rem; }
+    .prediction-result { margin: 14px 0 6px; color: #0f766e; font-size: 1.35rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; white-space: nowrap; }
+    th { background: #f8fafc; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .actions .button { margin-top: 12px; }
+    .subheading { margin: 20px 0 8px; font-size: 1rem; }
+    footer { padding: 20px; color: #64748b; font-size: .82rem; text-align: center; }
+    @media (max-width: 640px) {
+      header { padding-top: 34px; }
+      .grid { grid-template-columns: 1fr; }
+      .panel { padding: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">Machine learning project</p>
+      <h1>Credit Card Fraud Detection</h1>
+      <p>Train a logistic regression model from Kaggle transaction data, evaluate its results, and upload transactions for fraud predictions.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="notice">
+      The common Kaggle credit-card dataset uses <strong>Class</strong> as its label:
+      <strong>0</strong> means legitimate and <strong>1</strong> means fraud.
+      Training uses numeric features, scales them, and balances the classes.
+    </p>
+
+    {% if error %}
+    <div class="error" role="alert"><strong>Could not complete the request:</strong> {{ error }}</div>
+    {% endif %}
+
+    <section class="panel">
+      <h2>1. Train the model</h2>
+      <p class="description">Upload a labeled Kaggle CSV, or use the <code>creditcard.csv</code> already in the project folder. The test split is held out for evaluation; the downloadable final model is then trained on all rows.</p>
+      <form action="{{ url_for('train') }}" method="post" enctype="multipart/form-data">
+        <div class="grid">
+          <div>
+            <label for="dataset">Kaggle dataset (CSV)</label>
+            <input id="dataset" name="dataset" type="file" accept=".csv,text/csv">
+            {% if dataset_available %}
+            <p class="field-hint">No file selected? The project will use its local creditcard.csv dataset.</p>
+            {% else %}
+            <p class="field-hint">Choose the CSV file you downloaded from Kaggle.</p>
+            {% endif %}
+          </div>
+          <div>
+            <label for="target_column">Label column</label>
+            <input id="target_column" name="target_column" type="text" value="Class" required>
+            <p class="field-hint">The column containing the known legitimate/fraud labels.</p>
+          </div>
+          <div>
+            <label for="fraud_label">Value that means fraud</label>
+            <input id="fraud_label" name="fraud_label" type="text" value="1" required>
+            <p class="field-hint">Usually 1 in the Kaggle credit-card dataset.</p>
+          </div>
+          <div>
+            <label for="test_percentage">Test data percentage</label>
+            <input id="test_percentage" name="test_percentage" type="number" min="10" max="50" step="5" value="25" required>
+            <p class="field-hint">The remaining data is used to fit the evaluation model.</p>
+          </div>
+        </div>
+        <button type="submit">Train and evaluate</button>
+      </form>
+      <div class="status {{ 'ready' if model_available else '' }}">
+        {{ '● Model ready — you can also predict transactions below.' if model_available else '○ No trained model found yet.' }}
+      </div>
+    </section>
+
+    {% if result and result.automatic_prediction %}
+    <section class="panel results" aria-live="polite">
+      <h2>Automatic sample prediction</h2>
+      <p class="description">
+        The website automatically checked the first transaction from the model's dataset.
+        {% if result.sample_amount is not none %}
+        Transaction amount: {{ "%.2f"|format(result.sample_amount) }}.
+        {% endif %}
+      </p>
+      <p class="prediction-result"><strong>{{ result.automatic_prediction }}</strong></p>
+      <p class="field-hint">
+        Estimated fraud probability:
+        {{ "%.2f"|format(result.automatic_probability * 100) }}%.
+        This sample result is generated automatically when the website opens.
+      </p>
+    </section>
+    {% endif %}
+
+    {% if result and result.manual_prediction is defined %}
+<section class="panel results" aria-live="polite">
+  <h2>Transaction Prediction</h2>
+  <p class="description">
+    Model result:
+    <strong>{{ result.manual_prediction }}</strong>
+  </p>
+  <p class="field-hint">
+    This is an educational machine-learning prediction, not a real banking decision.
+  </p>
+</section>
+{% endif %}
+
+    <section class="panel">
+      <h2>2. Predict transactions from a CSV</h2>
+      <p class="description">
+        Upload an unlabeled CSV with the same numeric feature columns used to train
+        the model. Predictions and fraud probabilities will appear automatically.
+      </p>
+      <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data">
+        <label for="transactions">Transactions CSV</label>
+        <input id="transactions" name="transactions" type="file" accept=".csv,text/csv" required>
+        <button type="submit">Predict transactions</button>
+      </form>
+    </section>
+
+    {% if result and result.metrics %}
+    <section class="panel results" aria-live="polite">
+      <h2>Model training complete</h2>
+      <p class="description">
+        Dataset: {{ result.dataset_name }} · {{ "{:,}".format(result.row_count) }} rows ·
+        {{ result.feature_count }} numeric features ·
+        {{ "{:,}".format(result.fraud_count) }} fraud examples.
+        Evaluation used {{ result.test_percentage }}% held-out data
+        ({{ "{:,}".format(result.test_count) }} transactions).
+      </p>
+      <div class="metrics">
+        <div class="metric"><span>Precision</span><strong>{{ "%.3f"|format(result.metrics.precision) }}</strong></div>
+        <div class="metric"><span>Recall</span><strong>{{ "%.3f"|format(result.metrics.recall) }}</strong></div>
+        <div class="metric"><span>F1 score</span><strong>{{ "%.3f"|format(result.metrics.f1_score) }}</strong></div>
+        <div class="metric"><span>ROC-AUC</span><strong>{{ "%.3f"|format(result.metrics.roc_auc) }}</strong></div>
+        <div class="metric"><span>Average precision</span><strong>{{ "%.3f"|format(result.metrics.average_precision) }}</strong></div>
+      </div>
+      <h3 class="subheading">Confusion matrix</h3>
+      <p class="field-hint">Rows are actual labels; columns are predicted labels.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Predicted legitimate</th><th>Predicted fraud</th></tr></thead>
+          <tbody>
+            <tr><th>Actual legitimate</th><td>{{ result.metrics.confusion_matrix[0][0] }}</td><td>{{ result.metrics.confusion_matrix[0][1] }}</td></tr>
+            <tr><th>Actual fraud</th><td>{{ result.metrics.confusion_matrix[1][0] }}</td><td>{{ result.metrics.confusion_matrix[1][1] }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="field-hint">Model inputs include: {{ result.feature_preview|join(", ") }}{% if result.feature_count > result.feature_preview|length %}, and other numeric features{% endif %}.</p>
+      <div class="actions">
+        <a class="button" href="{{ url_for('download_model') }}">Download trained model</a>
+        <a class="button" href="{{ url_for('download_test_predictions') }}">Download test predictions CSV</a>
+      </div>
+    </section>
+    {% elif result and result.predictions %}
+    <section class="panel results" aria-live="polite">
+      <h2>Transaction predictions ready</h2>
+      <p class="description">{{ "{:,}".format(result.prediction_count) }} transactions processed. A fraud probability closer to 1 means the model considers the transaction more likely to be fraud.</p>
+      <div class="table-wrap">{{ result.predictions|safe }}</div>
+      <a class="button" href="{{ url_for('download_predictions') }}">Download all predictions CSV</a>
+    </section>
+    {% endif %}
+
+    <p class="field-hint">For educational use only. This model is not suitable for real financial or fraud decisions.</p>
+  </main>
+  <footer>Logistic regression · stratified test evaluation · generated by your uploaded dataset</footer>
+</body>
+</html>

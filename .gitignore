@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.py[cod]
+fraud_detection_model.joblib
+credit_card_fraud_model.joblib
+fraud_test_predictions.csv
+fraud_predictions.csv
