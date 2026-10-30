@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: mini-project-fraud-detection
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8

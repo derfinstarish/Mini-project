@@ -24,6 +24,25 @@ serves a regular HTML website. When `creditcard.csv` is present, the first visit
 automatically trains a model if needed and displays a sample transaction
 prediction. No code edits or manual feature entry are required to see the demo.
 
+## Publish a public website on Render
+
+The GitHub repository stores the source code; Render runs the Flask website and
+provides its public URL.
+
+1. Sign in to [Render](https://dashboard.render.com/) and choose **New**
+   then **Blueprint**.
+2. Connect `derfinstarish/Mini-project` and deploy the Blueprint from the
+   `main` branch. Render reads `render.yaml` to install dependencies and start
+   the website.
+3. When the deployment finishes, open the `onrender.com` URL shown in the
+   Render service dashboard. Anyone with the link can open the website.
+
+The included Blueprint uses Render's free web-service plan. Free services can
+spin down while idle, so the first visit after inactivity may take a little
+longer. The service uses temporary storage; a generated model may need to be
+trained again after a restart. Subsequent pushes to `main` can be deployed
+automatically by Render.
+
 ## Train a model
 
 The website uses the local `creditcard.csv` automatically if it is in this
