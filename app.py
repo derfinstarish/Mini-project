@@ -17,7 +17,7 @@ TEST_PREDICTIONS_PATH = PROJECT_DIR / "fraud_test_predictions.csv"
 PREDICTIONS_PATH = PROJECT_DIR / "fraud_predictions.csv"
 MAX_UPLOAD_SIZE = 256 * 1024 * 1024
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=str(PROJECT_DIR))
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE
 
 
